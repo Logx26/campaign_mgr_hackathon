@@ -1,0 +1,192 @@
+# Completeness rules over the Brief schema.
+# Loaded by core/rules/loader.py; consumed by agents/completeness_checker.py.
+#
+# Each rule:
+#   rule_id          stable string identifier (used for citations)
+#   field_path       dotted path into the Brief Pydantic model
+#   severity         hard | soft  (hard = must-fix gap; soft = LLM may also flag in ambiguity)
+#   check_type       required | non_empty | min_length | present_if | numeric_positive
+#   weight           contribution to the 0-100 completeness score (sum across rules ~= 100)
+#   description      human-readable, surfaced in GapList
+#   repair_question  short prompt the Clarifier may use as a starting point
+
+rules:
+  # ----- Identity & objective -----
+  - rule_id: brief.campaign_name.required
+    field_path: campaign_name
+    severity: hard
+    check_type: non_empty
+    weight: 5
+    description: "Campaign has no name."
+    repair_question: "What should we call this campaign internally?"
+
+  - rule_id: brief.business_objective.required
+    field_path: business_objective
+    severity: hard
+    check_type: non_empty
+    weight: 8
+    description: "Business objective is missing."
+    repair_question: "What is the business outcome this campaign must achieve?"
+
+  - rule_id: brief.business_objective.quantified
+    field_path: quantified_targets
+    severity: soft
+    check_type: non_empty
+    weight: 8
+    description: "Objective has no quantified target (number + unit)."
+    repair_question: "What measurable target defines success — e.g., 200 demos, 22% conversion, $1M pipeline?"
+
+  # ----- Audience -----
+  - rule_id: brief.audience.raw.required
+    field_path: target_audience.raw_description
+    severity: hard
+    check_type: non_empty
+    weight: 6
+    description: "Target audience is missing."
+    repair_question: "Who is this campaign for? Industry, size, role?"
+
+  - rule_id: brief.audience.firmographics
+    field_path: target_audience.resolved_segments
+    severity: soft
+    check_type: non_empty
+    weight: 6
+    description: "Audience is described in prose but not resolved into a firmographic segment."
+    repair_question: "What are the firmographic boundaries — headcount range, industries, geographies?"
+
+  # ----- Message -----
+  - rule_id: brief.key_message.required
+    field_path: key_message
+    severity: hard
+    check_type: non_empty
+    weight: 6
+    description: "Key message is missing."
+    repair_question: "What is the single most important message the audience should take away?"
+
+  - rule_id: brief.key_message.length
+    field_path: key_message
+    severity: soft
+    check_type: min_length
+    min_length: 30
+    weight: 3
+    description: "Key message is very short — likely missing the proof or angle."
+    repair_question: "What's the proof point or angle behind this message?"
+
+  # ----- Channels -----
+  - rule_id: brief.channels.required
+    field_path: channels
+    severity: hard
+    check_type: non_empty
+    weight: 7
+    description: "No channels listed."
+    repair_question: "Which channels will deliver this campaign — LinkedIn, email, paid search, events?"
+
+  - rule_id: brief.channels.specific
+    field_path: channels
+    severity: soft
+    check_type: present_if
+    present_if: "no channel name in the list is a vague umbrella term like 'social' or 'digital'"
+    weight: 4
+    description: "Channel list contains a vague term ('social', 'digital') that needs to be resolved into specific platforms."
+    repair_question: "When you say 'social', which platforms specifically — LinkedIn, X, Instagram, Facebook?"
+
+  # ----- Budget -----
+  - rule_id: brief.budget.total.required
+    field_path: budget.total
+    severity: hard
+    check_type: numeric_positive
+    weight: 6
+    description: "Total budget is not specified."
+    repair_question: "What is the approved total budget, or a target range?"
+
+  - rule_id: brief.budget.per_channel
+    field_path: budget.per_channel
+    severity: soft
+    check_type: non_empty
+    weight: 5
+    description: "Per-channel budget allocation not specified."
+    repair_question: "How is the budget split across channels?"
+
+  # ----- Timeline -----
+  - rule_id: brief.timeline.launch_date.required
+    field_path: timeline.launch_date
+    severity: hard
+    check_type: required
+    weight: 6
+    description: "Concrete launch date is missing."
+    repair_question: "What is the launch date — a specific calendar date, not 'by July'?"
+
+  - rule_id: brief.timeline.asset_lock_date
+    field_path: timeline.asset_lock_date
+    severity: soft
+    check_type: required
+    weight: 4
+    description: "Asset-lock date is missing — reviewers won't know when copy must be frozen."
+    repair_question: "By what date must creative + copy be locked for QA?"
+
+  - rule_id: brief.timeline.milestones
+    field_path: timeline.milestones
+    severity: soft
+    check_type: non_empty
+    weight: 3
+    description: "No interim milestones declared."
+    repair_question: "What milestones precede launch — kickoff, copy review, design lock?"
+
+  # ----- Success metrics -----
+  - rule_id: brief.success_metrics.required
+    field_path: success_metrics
+    severity: hard
+    check_type: non_empty
+    weight: 6
+    description: "Success metrics are missing."
+    repair_question: "How will success be measured — which metrics and what target values?"
+
+  - rule_id: brief.success_metrics.baseline
+    field_path: success_metrics
+    severity: soft
+    check_type: present_if
+    present_if: "every success_metric has a baseline + target"
+    weight: 4
+    description: "At least one success metric is missing a baseline or target."
+    repair_question: "What's the current baseline and target value for each metric?"
+
+  # ----- Constraints / governance -----
+  - rule_id: brief.constraints.brand_notes
+    field_path: constraints.tone_guidelines
+    severity: soft
+    check_type: non_empty
+    weight: 3
+    description: "No tone or brand guidelines provided."
+    repair_question: "Are there tone guidelines or brand-voice notes to enforce?"
+
+  - rule_id: brief.constraints.legal
+    field_path: constraints.legal_restrictions
+    severity: soft
+    check_type: non_empty
+    weight: 3
+    description: "No legal restrictions or compliance notes provided."
+    repair_question: "Any legal restrictions — claim limits, regulated geographies, required disclosures?"
+
+  - rule_id: brief.constraints.exclusions
+    field_path: constraints.exclusions
+    severity: soft
+    check_type: non_empty
+    weight: 2
+    description: "No exclusions declared (competitors not to mention, suppression lists, audiences to avoid)."
+    repair_question: "Anything we must NOT do — competitors to avoid mentioning, audiences to suppress?"
+
+  # ----- Approval path -----
+  - rule_id: brief.constraints.mandatory_inclusions
+    field_path: constraints.mandatory_inclusions
+    severity: soft
+    check_type: non_empty
+    weight: 2
+    description: "No mandatory inclusions stated (legal disclaimers, partner mentions, required CTAs)."
+    repair_question: "Anything that must be included in every asset — disclaimers, partner credits, mandatory CTAs?"
+
+  - rule_id: brief.raw_source.required
+    field_path: raw_source
+    severity: hard
+    check_type: non_empty
+    weight: 3
+    description: "Raw brief text is missing (intake parsed nothing)."
+    repair_question: "Could you paste the original brief text again?"

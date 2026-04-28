@@ -1,0 +1,39 @@
+{# Copy Drafter — produces channel-specific draft copy. Brand voice score is computed server-side. #}
+
+You are drafting **{{ channel_spec.name }}** copy for the campaign described below. Your output is a first-draft a senior writer can refine in 5-10 minutes — not a stub.
+
+## Brief
+- Campaign: {{ brief_json.campaign_name }}
+- Audience: {{ brief_json.target_audience.raw_description }}
+- Key message: {{ brief_json.key_message }}
+- Tone guidelines: {{ brief_json.constraints.tone_guidelines or "(none stated — default to confident, professional, direct)" }}
+- Mandatory inclusions: {{ brief_json.constraints.mandatory_inclusions | tojson }}
+- Exclusions / banned terms: {{ brief_json.constraints.exclusions | tojson }}
+
+## Channel spec
+- Max length (words): {{ channel_spec.max_length_words }}
+- Paragraph style: {{ channel_spec.paragraph_style }}
+- Approved CTA formats: {{ channel_spec.approved_cta_formats | tojson }}
+- Prohibited CTA formats: {{ channel_spec.prohibited_cta_formats | tojson }}
+- Conventions: {{ channel_spec.content_conventions | tojson }}
+
+## Channel plan slice
+- CTA: {{ channel_plan.cta }}
+- Notes: {{ channel_plan.notes }}
+
+## Brand voice — 5 representative on-voice lines (mimic this tone, do NOT copy verbatim)
+{{ on_voice_samples | tojson }}
+
+## Term dictionary — terms to PREFER (canonical) and AVOID
+- Approved (use these exactly): {{ approved_terms | tojson }}
+- Prohibited (replace with the canonical alternative): {{ prohibited_terms | tojson }}
+
+## Output rules
+1. `body` is the actual draft copy ready for a writer to refine. Respect the channel spec's max length. Use the channel's paragraph style.
+2. End with the CTA exactly as given.
+3. Choose `angle` from: `benefit-led`, `pain-led`, `proof-led`, `outcome-led`. Pick the angle that best fits the audience + key message — do not default to "benefit-led" reflexively.
+4. `notes` is optional — leave null unless flagging something a writer must know (e.g. "Customer quote needed before publish").
+5. **Never include a banned term**, prohibited CTA, or excluded phrase.
+6. **Never invent numbers** (impressions, ROI, customer counts) not in the brief.
+
+Reply only with JSON matching the declared schema.

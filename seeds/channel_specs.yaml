@@ -1,0 +1,146 @@
+# Channel specs — seeded at P1, editable post-seed via the channel_spec_repo.
+# Tier 0 demo uses the first 3 channels; the remaining 3 ship in seeds for completeness.
+
+channels:
+  - name: LinkedIn
+    version: 1
+    max_length_words: 220
+    paragraph_style: "2–4 short paragraphs, blank line between; opening hook ≤ 2 lines"
+    approved_cta_formats:
+      - "Book a demo"
+      - "See how it works"
+      - "Read the playbook"
+      - "Talk to sales"
+    prohibited_cta_formats:
+      - "Click here"
+      - "Sign up now"
+      - "Buy today"
+    tone_guidelines: "Confident, professional, conversational. Use 'we' and 'you'. Avoid superlatives."
+    content_conventions:
+      - "Lead with a specific pain or stat, not a brand boast."
+      - "One CTA per post. Place it in the final paragraph."
+      - "No hashtags in body text; max 3 at end."
+      - "Mention the customer/audience first, the product second."
+    typical_budget_range_low: 3000
+    typical_budget_range_high: 25000
+    asset_types_required:
+      - "post copy"
+      - "header image (1200x627)"
+      - "(optional) carousel slides 1080x1080"
+
+  - name: Email
+    version: 1
+    max_length_words: 180
+    paragraph_style: "Short paragraphs, scannable. Subject line ≤ 60 chars; preheader ≤ 90 chars."
+    approved_cta_formats:
+      - "Book a demo"
+      - "Read the customer story"
+      - "Watch the 2-minute walkthrough"
+    prohibited_cta_formats:
+      - "Click here"
+      - "Act now"
+      - "Last chance"
+    tone_guidelines: "Helpful, direct, never pushy. First-person plural OK; avoid corporate-voice."
+    content_conventions:
+      - "Open with the recipient's situation, not the brand."
+      - "One primary CTA, optionally one secondary link."
+      - "Plain-text option must work without images."
+      - "No countdown timers in EU-bound mail."
+    typical_budget_range_low: 1000
+    typical_budget_range_high: 8000
+    asset_types_required:
+      - "subject line + preheader"
+      - "body copy (HTML + plain-text)"
+      - "(optional) hero image"
+
+  - name: Paid Search
+    version: 1
+    max_length_words: 60
+    paragraph_style: "Headline ≤ 30 chars × 3, description ≤ 90 chars × 2"
+    approved_cta_formats:
+      - "Book a demo"
+      - "See pricing"
+      - "Start free trial"
+    prohibited_cta_formats:
+      - "Buy"
+      - "Best ever"
+    tone_guidelines: "Direct, benefit-led, intent-matching. Lead with the outcome, not the brand."
+    content_conventions:
+      - "Match landing page H1 within ad headlines."
+      - "No superlatives that violate Google policy."
+      - "Include the audience modifier when search-intent allows."
+    typical_budget_range_low: 5000
+    typical_budget_range_high: 60000
+    asset_types_required:
+      - "3 responsive search ads with 8+ headlines each"
+      - "5+ description variants"
+      - "matching landing page reference"
+
+  - name: Landing Page
+    version: 1
+    max_length_words: 600
+    paragraph_style: "Hero + 3 sections + CTA block. Section headers ≤ 8 words."
+    approved_cta_formats:
+      - "Book a demo"
+      - "Get the playbook"
+      - "Start your trial"
+    prohibited_cta_formats:
+      - "Submit"
+      - "Click here"
+    tone_guidelines: "Outcome-led, scannable. Numbers and proof points beat adjectives."
+    content_conventions:
+      - "Hero CTA must match the ad CTA that drove the visit."
+      - "Social proof block within the first scroll."
+      - "Form fields ≤ 5 unless gated by audience tier."
+    typical_budget_range_low: 2000
+    typical_budget_range_high: 15000
+    asset_types_required:
+      - "hero copy + visual"
+      - "3 value sections"
+      - "CTA + form"
+      - "social proof block"
+
+  - name: Event Page
+    version: 1
+    max_length_words: 400
+    paragraph_style: "Date/place/agenda upfront, then narrative."
+    approved_cta_formats:
+      - "Save your seat"
+      - "Register"
+      - "Add to calendar"
+    prohibited_cta_formats:
+      - "Click here"
+    tone_guidelines: "Inviting, specific. Lead with what attendees will learn or take home."
+    content_conventions:
+      - "Show speaker headshots and titles near the top."
+      - "Agenda is bullet-point, not paragraph."
+      - "Capacity / time-zone / format must be unambiguous."
+    typical_budget_range_low: 1500
+    typical_budget_range_high: 12000
+    asset_types_required:
+      - "page copy"
+      - "agenda block"
+      - "speaker bios + headshots"
+      - "registration form"
+
+  - name: SDR Outreach
+    version: 1
+    max_length_words: 120
+    paragraph_style: "≤ 4 sentences per email; sequence of 3–5 touches."
+    approved_cta_formats:
+      - "Open to a 15-minute call?"
+      - "Worth a quick chat?"
+    prohibited_cta_formats:
+      - "Schedule a 30-minute discovery"
+      - "Looking forward to hearing from you"
+    tone_guidelines: "Personal, low-pressure, specific to the prospect's role/company."
+    content_conventions:
+      - "Reference one observable signal (role, recent post, company event)."
+      - "No template-marker phrases in send."
+      - "Sequence: 3-touch by default; +2 only if persona is enterprise."
+    typical_budget_range_low: 0
+    typical_budget_range_high: 3000
+    asset_types_required:
+      - "email sequence (3–5 touches)"
+      - "personalization tokens defined"
+      - "CRM stage mapping"

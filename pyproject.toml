@@ -1,0 +1,74 @@
+[project]
+name = "campaign_mgr"
+version = "0.1.0"
+description = "AI Campaign Management System — brief-to-plan with clarification dialog, QA, and multi-asset consistency"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Hackathon Team" }]
+
+dependencies = [
+    # Core runtime
+    "pydantic>=2.7,<3.0",
+    "pydantic-settings>=2.3,<3.0",
+    "fastapi>=0.111,<0.120",
+    "uvicorn[standard]>=0.30,<0.40",
+    "streamlit>=1.35,<2.0",
+    "langgraph>=0.2,<0.3",
+    "langgraph-checkpoint-postgres>=1.0,<3.0",
+    "langchain-core>=0.2,<0.4",
+    "openai>=1.30,<2.0",
+    "httpx>=0.27,<0.30",
+    "tenacity>=8.3,<10.0",
+
+    # Data
+    "sqlalchemy>=2.0,<3.0",
+    "psycopg[binary]>=3.1,<4.0",
+    "alembic>=1.13,<2.0",
+    "qdrant-client>=1.9,<2.0",
+    "redis>=5.0,<6.0",
+
+    # Document & parsing
+    "pdfplumber>=0.11,<1.0",
+    "python-docx>=1.1,<2.0",
+    "markdown-it-py>=3.0,<4.0",
+    "jinja2>=3.1,<4.0",
+    "pyyaml>=6.0,<7.0",
+
+    # ML / numeric
+    "numpy>=1.26,<3.0",
+    "scikit-learn>=1.4,<2.0",
+    "hdbscan>=0.8,<1.0",
+
+    # Observability
+    "structlog>=24.1,<26.0",
+    "rich>=13.7,<15.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "pytest-cov>=5.0,<7.0",
+]
+export = [
+    # Tier 1 — added when PDF/PPTX export ships
+    "reportlab>=4.0,<5.0",
+    "python-pptx>=1.0,<2.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "agents*", "orchestrator*", "knowledge*", "tools*", "export*", "observability*", "eval*", "api*", "ui*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: integration tests (requires live services)",
+    "eval: golden-set evaluation tests",
+]

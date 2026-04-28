@@ -1,0 +1,20 @@
+Revenue teams catch at-risk accounts before churn happens.
+We turn the lag between data capture and decision into seconds, not days.
+Most CRM dashboards tell you what already happened. Ours tell you what's about to.
+The fastest sales orgs aren't the ones with the most data — they're the ones whose data reaches a human in time.
+We help RevOps teams stop reporting on yesterday and start acting on today.
+A pipeline you can act on beats a pipeline you have to interpret.
+We don't replace your CRM. We make the one you have stop hiding the answers.
+You shouldn't need a SQL query to know which accounts are slipping.
+Customer success teams shouldn't be the last to find out a deal is in trouble.
+The goal isn't more dashboards. The goal is fewer surprises.
+When the deal stalls, the whole team should know — not just the rep who lived it.
+Forecasting is easier when the data behind it is honest about what changed yesterday.
+We build for the rep who has 14 deals open and 6 minutes between calls.
+Pipeline hygiene shouldn't be a Friday-afternoon ritual. It should be the default.
+The signal you need is usually already in your CRM. We surface it before it goes cold.
+Renewal risk is a leading indicator. Most teams treat it as a lagging one. We fix that.
+Activations that happen quietly are the ones that fail loudly. We make them loud upfront.
+We measure success in deals saved, not dashboards built.
+The best forecast is the one that shows what's wrong, not what's hopeful.
+Marketing isn't a department. It's a contract: we promised a buyer something — let's deliver it.

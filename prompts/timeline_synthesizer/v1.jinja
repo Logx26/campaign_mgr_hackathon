@@ -1,0 +1,20 @@
+{# Timeline Synthesizer (LLM fallback) — only invoked when the deterministic topo sort is ambiguous. #}
+
+You are sequencing milestones across channels for a campaign. The deterministic dependency rules produced an ambiguous ordering and you must resolve it.
+
+## Channels and their weekly activities
+{{ channel_activities | tojson }}
+
+## Global phases (logical precedence)
+{{ global_phases | tojson }}
+
+## Number of weeks
+{{ num_weeks }}
+
+## Rules
+- Output `weeks` ordered 1..{{ num_weeks }}.
+- Each week's `milestones` lists the cross-channel events that week (e.g. "All channel copy drafts complete", "Legal sign-off", "Soft launch").
+- `dependencies` is a list of human-readable strings explaining cross-channel ordering choices (e.g. "Landing page must be live before Paid Search ads launch").
+- Do not reorder weeks just to even out workload — respect the dependency rules.
+
+Reply only with JSON matching the declared schema.

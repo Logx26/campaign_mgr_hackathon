@@ -1,0 +1,23 @@
+# Expected gaps for golden brief 001.
+# Used by eval/runner.py once P3 wires the gap detectors.
+
+hard_gaps:
+  - field_path: budget.total
+    description: Total budget not specified
+  - field_path: timeline.launch_date
+    description: Concrete launch date not specified ("by July" is ambiguous)
+  - field_path: success_metrics
+    description: No quantified target on demo signups (count, conversion rate, baseline)
+
+soft_gaps:
+  - field_path: channels
+    description: "'social' is ambiguous — which platforms (LinkedIn, X, Instagram, Facebook)?"
+  - field_path: target_audience
+    description: "'Enterprise companies' is undefined — headcount range, industry, geography, decision-maker titles all missing"
+  - field_path: business_objective
+    description: "'More demos' has no quantified target or baseline"
+  - field_path: timeline.asset_lock_date
+    description: No asset-lock date implied; reviewers won't know when to freeze copy
+
+minimum_total_gaps: 6
+expected_completeness_score_max: 50.0

@@ -1,0 +1,59 @@
+# Channel dependency + lead-time rules.
+# Used by the timeline synthesizer to topologically order milestones across channels.
+#
+# `requires_before_launch`: assets that must exist before this channel can go live.
+# `typical_lead_time_days`: copy-to-launch elapsed time for production planning.
+
+channels:
+  - channel: LinkedIn
+    requires_before_launch:
+      - copy_draft
+      - design_review
+      - brand_voice_qa
+    typical_lead_time_days: 7
+
+  - channel: Email
+    requires_before_launch:
+      - copy_draft
+      - subject_line_test
+      - design_review
+      - legal_review
+    typical_lead_time_days: 5
+
+  - channel: Paid Search
+    requires_before_launch:
+      - keyword_research
+      - copy_draft
+      - landing_page_ready
+    typical_lead_time_days: 5
+
+  - channel: Landing Page
+    requires_before_launch:
+      - hero_copy
+      - design_review
+      - cta_ready
+    typical_lead_time_days: 8
+
+  - channel: Event Page
+    requires_before_launch:
+      - speaker_lineup_locked
+      - agenda_locked
+      - registration_form_ready
+    typical_lead_time_days: 10
+
+  - channel: SDR Outreach
+    requires_before_launch:
+      - sequence_copy
+      - target_list
+      - crm_stage_mapping
+    typical_lead_time_days: 5
+
+# Cross-channel global precedence (logical order regardless of channel).
+global_phases:
+  - kickoff
+  - copy_draft
+  - design_review
+  - legal_review
+  - qa
+  - launch
+  - measurement

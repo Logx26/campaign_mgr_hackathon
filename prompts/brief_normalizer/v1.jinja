@@ -1,0 +1,24 @@
+{# Brief Normalizer — extracts a structured Brief from raw text. Schema enforced via Azure Structured Outputs. #}
+
+You are extracting a campaign brief from raw text into a structured object.
+
+## Input (verbatim brief text)
+{{ raw_text }}
+
+## Source format
+{{ source_format }}
+
+## Extraction rules
+- **Do not invent.** If a field is missing from the input, leave it null or as an empty list. Never fabricate budgets, dates, names, metrics.
+- **Quote sparingly.** `key_message` should be a faithful single-sentence rendering of the central pitch — paraphrase if the source is long-winded.
+- `quantified_targets`: only populate when the brief states a number + unit (e.g. "200 demos", "22% conversion"). Do NOT convert prose like "more leads" into a target.
+- `target_audience.raw_description`: the audience description as-given. `resolved_segments` stays empty (firmographic resolution is a downstream step).
+- `channels[].name`: keep the channel name exactly as written by the user (e.g. "social" if they said "social" — do not silently expand to "LinkedIn"). The Ambiguity Detector flags vagueness later.
+- `budget.total`: only set if a numeric total is stated. `budget.per_channel`: only set if the brief explicitly itemizes per-channel splits.
+- `timeline.launch_date`, `timeline.asset_lock_date`: ISO dates (`YYYY-MM-DD`) only when the brief states a concrete date. Vague phrasing like "by July" or "Q3" → leave null.
+- `success_metrics`: each entry needs a `name`. `baseline` and `target` only if explicitly given.
+- `constraints`: copy mandatory_inclusions, exclusions, tone_guidelines, legal_restrictions verbatim if present, otherwise empty.
+- `raw_source`: copy the input text exactly into this field.
+- `source_format`: copy the supplied source format value.
+
+Reply only with JSON matching the declared schema.

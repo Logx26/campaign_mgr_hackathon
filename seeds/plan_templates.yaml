@@ -1,0 +1,18 @@
+# Tier 1 reusable plan templates. Tier 0 ships only the names + sketches; full bodies authored
+# when Template Factory (W6) is built.
+
+templates:
+  - name: "B2B SaaS trial-to-paid"
+    sketch: "Trial users at qualified companies, push to paid via product-led nurture + sales-assist."
+    typical_channels: ["Email", "LinkedIn", "Paid Search", "SDR Outreach"]
+    typical_duration_weeks: 6
+
+  - name: "B2C retail re-purchase"
+    sketch: "Lapsed customers re-engaged via email + SMS + paid social, suppression on active buyers."
+    typical_channels: ["Email", "SMS", "Paid Social", "Loyalty Push"]
+    typical_duration_weeks: 6
+
+  - name: "Enterprise launch"
+    sketch: "Multi-stakeholder enterprise account push — exec narrative + practitioner content + SDR."
+    typical_channels: ["LinkedIn", "Email", "Event Page", "SDR Outreach", "Landing Page"]
+    typical_duration_weeks: 8

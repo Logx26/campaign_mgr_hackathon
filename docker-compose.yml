@@ -1,0 +1,73 @@
+# Campaign Management — extends the provided storage stack.
+# Postgres / Qdrant / Redis are assumed already running from the organizer-provided compose.
+# This file adds the api and ui services for local dev.
+#
+# Usage:
+#   docker compose up -d           # brings up api + ui (talking to host postgres/qdrant/redis)
+#   docker compose logs -f api
+#
+# If you want everything in one compose, uncomment the storage services below.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: campaign-mgr-api
+    env_file: .env
+    environment:
+      # When running api in container, use host.docker.internal to reach host services.
+      # Override these in .env if you mount everything in one network.
+      POSTGRES_DSN: ${POSTGRES_DSN:-postgresql+psycopg://hackuser:hackpass@host.docker.internal:5432/hackdb}
+      QDRANT_URL: ${QDRANT_URL:-http://host.docker.internal:6333}
+      REDIS_URL: ${REDIS_URL:-redis://host.docker.internal:6379/0}
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: campaign-mgr-ui
+    env_file: .env
+    environment:
+      # UI talks to API via the docker-compose internal network.
+      API_BASE_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # --- Optional: uncomment if you want this compose to own the storage too ---
+  # postgres:
+  #   image: postgres:16
+  #   environment:
+  #     POSTGRES_USER: hackuser
+  #     POSTGRES_PASSWORD: hackpass
+  #     POSTGRES_DB: hackdb
+  #   ports: ["5432:5432"]
+  #   volumes: ["pgdata:/var/lib/postgresql/data"]
+  #
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   ports: ["6333:6333", "6334:6334"]
+  #   volumes: ["qdrant_data:/qdrant/storage"]
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   ports: ["6379:6379"]
+  #
+  # volumes:
+  #   pgdata:
+  #   qdrant_data:

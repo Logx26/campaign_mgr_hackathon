@@ -1,0 +1,36 @@
+{# Ambiguity Detector — finds soft gaps the rule engine cannot catch (semantic vagueness). #}
+
+You are auditing a structured campaign brief for **semantic ambiguity** — places where the brief LOOKS complete to a rule-checker but a campaign manager would still need to ask a question before generating a plan.
+
+## Brief (already extracted, may have empty fields)
+{{ brief_json | tojson }}
+
+## Already-flagged hard gaps (do NOT re-flag these)
+{{ existing_hard_gap_ids | tojson }}
+
+## Channel spec catalog (for context — DO NOT include in output)
+{{ channel_specs_summary | tojson }}
+
+## What you are looking for (examples of GOOD ambiguity finds)
+- Vague channel umbrellas — "social" without naming platforms; "digital" without a primary surface; "media" without paid vs earned.
+- Audiences described in personas without firmographics — "enterprise companies" with no headcount, industry, or geo cut.
+- Objectives stated as direction not destination — "more leads", "drive demand", "build awareness" with no numeric target.
+- Audience+channel mismatches — e.g. brief says "C-suite at financial services" but channels list TikTok.
+- Timeline phrases that read as concrete but aren't — "by end of quarter", "in summer", "before launch".
+- Success metrics with no baseline (so "improvement" is undefined).
+- Tone/brand fields blank when the audience demands them (regulated industries, executive buyers).
+
+## What you are NOT looking for
+- Anything already in `existing_hard_gap_ids` — those are covered by the rule engine.
+- Style/grammar nits.
+- Strategy critiques ("this campaign won't work because…").
+- Hypotheticals not grounded in the brief.
+
+## Output rules
+- Return up to **6** gaps. Quality over quantity.
+- Every gap MUST include: `field_path` (dotted path into the Brief), `severity='soft'`, `source='llm'`, `description` (specific, not generic), and `suggested_questions` (1-2 specific questions a Clarifier could ask).
+- `rule_id` MUST be null for all your gaps (rule_id is reserved for the rule engine).
+- `field_path` must reference a real field in the Brief schema (e.g. `channels`, `target_audience.raw_description`, `success_metrics`, `timeline.launch_date`, `business_objective`, `quantified_targets`, `key_message`, `budget.per_channel`, `constraints.tone_guidelines`).
+- Do NOT invent gaps to fill quota — if the brief is genuinely tight, return fewer.
+
+Reply only with JSON: an object `{"gaps": [...]}` where each gap matches the declared schema.

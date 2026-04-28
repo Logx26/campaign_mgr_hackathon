@@ -1,0 +1,75 @@
+# Term dictionary — approved terms, prohibited terms, synonyms, canonical mappings.
+# Seed reflects an "Axion-style" B2B SaaS brand book.
+
+terms:
+  # --- Approved canonical terms (with synonyms that should be normalized to them) ---
+  - term: "AI-assisted"
+    type: approved
+    canonical: "AI-assisted"
+    synonyms: ["AI-powered", "AI-enabled", "machine learning–powered", "ML-powered"]
+    notes: "Use 'AI-assisted' to imply the human stays in control. Avoid 'AI-powered' — implies autonomous decisioning."
+    rule_ref: "brand_book_§3.1"
+
+  - term: "revenue operations"
+    type: approved
+    canonical: "revenue operations"
+    synonyms: ["RevOps", "rev-ops", "Rev Ops"]
+    notes: "Spell out on first mention; 'RevOps' is acceptable thereafter."
+    rule_ref: "brand_book_§4.2"
+
+  - term: "book a demo"
+    type: approved
+    canonical: "book a demo"
+    synonyms: ["schedule a call", "request a demo", "book a meeting"]
+    notes: "Standard CTA for mid-funnel."
+    rule_ref: "brand_book_§5.1"
+
+  - term: "trial-to-paid"
+    type: approved
+    canonical: "trial-to-paid"
+    synonyms: ["trial conversion", "free-to-paid"]
+    notes: "Industry-standard term; preserve hyphenation."
+    rule_ref: "brand_book_§4.3"
+
+  # --- Prohibited terms (must be replaced) ---
+  - term: "revolutionary"
+    type: prohibited
+    canonical: null
+    synonyms: ["game-changing", "disruptive", "groundbreaking"]
+    notes: "Marketing fluff. Replace with a concrete, quantified claim."
+    rule_ref: "brand_book_§3.2"
+
+  - term: "leverage"
+    type: prohibited
+    canonical: null
+    synonyms: []
+    notes: "Use 'use' or describe the specific action."
+    rule_ref: "brand_book_§3.2"
+
+  - term: "seamless"
+    type: prohibited
+    canonical: null
+    synonyms: ["seamlessly", "frictionless"]
+    notes: "Vague benefit claim. Describe what specifically is removed."
+    rule_ref: "brand_book_§3.2"
+
+  - term: "world-class"
+    type: prohibited
+    canonical: null
+    synonyms: ["best-in-class", "industry-leading"]
+    notes: "Unverifiable superlative."
+    rule_ref: "brand_book_§3.2"
+
+  - term: "synergy"
+    type: prohibited
+    canonical: null
+    synonyms: ["synergistic", "synergize"]
+    notes: "Replace with a concrete description of how teams or systems work together."
+    rule_ref: "brand_book_§3.2"
+
+  - term: "click here"
+    type: prohibited
+    canonical: null
+    synonyms: []
+    notes: "Use a CTA that describes the destination."
+    rule_ref: "brand_book_§5.2"
