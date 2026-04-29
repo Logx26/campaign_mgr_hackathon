@@ -1,0 +1,18 @@
+hard_gaps:
+  - field_path: budget.total
+    description: "'A small budget' is not specified"
+  - field_path: timeline.launch_date
+    description: "'Throughout summer' has no concrete launch or end date"
+  - field_path: success_metrics
+    description: "'Repeat purchase rate up' has no baseline or target"
+
+soft_gaps:
+  - field_path: channels
+    description: "'social' and 'performance' are ambiguous — which platforms / surfaces?"
+  - field_path: target_audience
+    description: "'Repeat customers' is not segmented — frequency cohort, AOV tier, geography missing"
+  - field_path: business_objective
+    description: "'Get more customers buying again' has no quantified target"
+
+minimum_total_gaps: 5
+expected_completeness_score_max: 50.0

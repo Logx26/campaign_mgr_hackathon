@@ -1,0 +1,14 @@
+hard_gaps:
+  - field_path: budget.total
+    description: "'Not yet locked' is missing budget"
+  - field_path: timeline.launch_date
+    description: "'Q4 — exact start TBC' has no concrete launch date"
+
+soft_gaps:
+  - field_path: success_metrics
+    description: "'Conversion rate up' has no quantified target — though business_objective does, the metric block doesn't"
+  - field_path: channels
+    description: "'in-product messaging' is undefined as a channel surface"
+
+minimum_total_gaps: 3
+expected_completeness_score_max: 65.0

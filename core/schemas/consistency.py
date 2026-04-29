@@ -64,3 +64,25 @@ class ConsistencyReport(StrictModel):
     canonical_suggestions: list[CanonicalSuggestion] = Field(default_factory=list)
     overall_consistency_index: float = Field(ge=0.0, le=1.0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# LLM-facing extraction shapes (no server-generated UUIDs/timestamps)
+# ---------------------------------------------------------------------------
+
+
+class CTAFindingExtraction(StrictModel):
+    """LLM fallback shape for CTA scanner. asset_id supplied server-side, not by LLM."""
+
+    raw_cta: str
+    normalized_cta: str | None = None
+    is_cta: bool  # LLM verdict on whether the candidate string is actually a CTA in context
+
+
+class CanonicalSuggestionExtraction(StrictModel):
+    """LLM-emitted canonical recommendation for one terminology cluster."""
+
+    cluster_id: str
+    recommended_value: str
+    rationale: str
+    citation: str

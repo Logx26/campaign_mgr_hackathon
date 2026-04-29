@@ -1,0 +1,20 @@
+hard_gaps:
+  - field_path: budget.total
+    description: "'Whatever it takes' is not a budget"
+  - field_path: timeline.launch_date
+    description: "'ASAP' has no concrete launch date"
+  - field_path: success_metrics
+    description: "'More' has no metric, baseline, or target"
+
+soft_gaps:
+  - field_path: business_objective
+    description: "'Be number one' is unmeasurable and lacks a target"
+  - field_path: channels
+    description: "'All channels' is not a channel list"
+  - field_path: target_audience
+    description: "'Everyone with a credit card' is not a segmented audience"
+  - field_path: constraints.tone_guidelines
+    description: "Key message contains multiple prohibited terms (AI-powered, revolutionary, seamless, leverage, synergy, world-class) but no tone constraint flags them"
+
+minimum_total_gaps: 6
+expected_completeness_score_max: 30.0

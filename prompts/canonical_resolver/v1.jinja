@@ -1,0 +1,26 @@
+{# Canonical Resolver — pick the canonical for a terminology cluster the dictionary doesn't disambiguate. #}
+
+You are picking the **canonical brand term** to use across a campaign when several variants
+have appeared in different assets. The brand's term dictionary is provided; prefer canonicals
+already listed there whenever a variant matches.
+
+## Cluster
+- cluster_id: {{ cluster_id }}
+- variants: {{ variants | tojson }}
+- occurrences (variant → asset count): {{ occurrences | tojson }}
+
+## Term dictionary (approved + prohibited)
+{{ term_dictionary | tojson }}
+
+## Rules
+
+1. **Prefer dictionary canonicals.** If any variant matches a dictionary canonical (case-insensitive),
+   recommend that canonical and cite the dictionary's `rule_ref` directly.
+2. **If a variant is in the dictionary's prohibited terms, never recommend it.**
+3. **If no variant maps cleanly to the dictionary,** pick the variant with the highest occurrence
+   count, prefer the more specific term over the more generic, and use `llm_inference` as citation.
+4. **Rationale must explain the choice in ≤ 2 sentences** — quote the dictionary entry's notes
+   verbatim if relevant.
+5. **Never invent a new term that isn't in `variants`.**
+
+Reply only with JSON matching the declared schema.

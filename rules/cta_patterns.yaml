@@ -1,0 +1,91 @@
+# CTA pattern catalog — used by agents/cta_scanner.py (W3) and agents/governance.py.
+# Schema (per entry):
+#   id:           stable rule id (used as TerminologyFinding.rule_id / CTAFinding.rule_id)
+#   canonical:    the canonical CTA string this rule normalizes to
+#   patterns:     list of case-insensitive regexes that match this CTA family
+#   status:       approved | prohibited
+#   notes:        why we recommend this canonical (cited in CanonicalSuggestion)
+#   rule_ref:     brand-book / channel-spec section pointer
+#
+# Order matters: prohibited patterns are checked first so "click here" never normalizes
+# to an approved canonical via partial match.
+
+ctas:
+  # --- Prohibited (always flag) -------------------------------------------------
+  - id: cta_prohibited_click_here
+    canonical: null
+    patterns:
+      - '(?i)\bclick\s+here\b'
+    status: prohibited
+    notes: "Use a CTA that names the destination (e.g. 'Book a demo')."
+    rule_ref: "brand_book_§5.2"
+
+  - id: cta_prohibited_buy_now
+    canonical: null
+    patterns:
+      - '(?i)\bbuy\s+(now|today)\b'
+      - '(?i)\bact\s+now\b'
+      - '(?i)\blast\s+chance\b'
+    status: prohibited
+    notes: "Pressure CTAs violate Axion tone guidelines."
+    rule_ref: "brand_book_§5.2"
+
+  - id: cta_prohibited_sign_up_now
+    canonical: null
+    patterns:
+      - '(?i)\bsign\s+up\s+now\b'
+    status: prohibited
+    notes: "Avoid pressure modifiers on the sign-up CTA."
+    rule_ref: "brand_book_§5.2"
+
+  # --- Approved canonicals ------------------------------------------------------
+  - id: cta_book_a_demo
+    canonical: "Book a demo"
+    patterns:
+      - '(?i)\bbook\s+a\s+demo\b'
+      - '(?i)\bschedule\s+a\s+(call|meeting|demo)\b'
+      - '(?i)\brequest\s+a\s+(demo|meeting)\b'
+      - '(?i)\bbook\s+a\s+meeting\b'
+      - '(?i)\btalk\s+to\s+sales\b'
+    status: approved
+    notes: "Standard mid-funnel CTA. Term dictionary brand_book_§5.1 lists 'book a demo' as canonical with 'schedule a call' and 'request a demo' as synonyms."
+    rule_ref: "brand_book_§5.1"
+
+  - id: cta_start_free_trial
+    canonical: "Start free trial"
+    patterns:
+      - '(?i)\bstart\s+(your\s+|a\s+)?free\s+trial\b'
+      - '(?i)\bstart\s+your\s+trial\b'
+      - '(?i)\btry\s+it\s+free\b'
+    status: approved
+    notes: "Self-serve top-of-funnel CTA."
+    rule_ref: "channel_specs.paid_search"
+
+  - id: cta_see_pricing
+    canonical: "See pricing"
+    patterns:
+      - '(?i)\bsee\s+pricing\b'
+      - '(?i)\bview\s+pricing\b'
+    status: approved
+    notes: "Direct-intent CTA for pricing-aware traffic."
+    rule_ref: "channel_specs.paid_search"
+
+  - id: cta_read_the_playbook
+    canonical: "Read the playbook"
+    patterns:
+      - '(?i)\bread\s+the\s+(playbook|guide|report)\b'
+      - '(?i)\bget\s+the\s+(playbook|guide|report)\b'
+      - '(?i)\bdownload\s+the\s+(playbook|guide|report)\b'
+    status: approved
+    notes: "Top-of-funnel content CTA."
+    rule_ref: "channel_specs.linkedin"
+
+  - id: cta_register
+    canonical: "Register"
+    patterns:
+      - '(?i)\bregister\b'
+      - '(?i)\bsave\s+your\s+seat\b'
+      - '(?i)\breserve\s+your\s+spot\b'
+    status: approved
+    notes: "Event CTA family."
+    rule_ref: "channel_specs.event_page"

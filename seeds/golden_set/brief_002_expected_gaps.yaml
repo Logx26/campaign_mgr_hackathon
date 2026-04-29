@@ -1,0 +1,5 @@
+# Brief 002 is a deliberately COMPLETE brief — gap-catch should detect very few hard gaps.
+hard_gaps: []
+soft_gaps: []
+minimum_total_gaps: 0
+expected_completeness_score_max: 100.0

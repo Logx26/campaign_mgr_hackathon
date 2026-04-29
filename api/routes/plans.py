@@ -279,22 +279,50 @@ class StandaloneQARequest(BaseModel):
 
 class StandaloneQAResponse(BaseModel):
     validation_report: ValidationReport
+    blocking: bool
 
 
 @router.post("/qa", response_model=StandaloneQAResponse)
-async def standalone_qa(req: StandaloneQARequest) -> StandaloneQAResponse:
-    """W2 entry point — accepts a raw brief + a plan JSON and returns a critic report.
-    This phase ships a minimal version: the critic runs against the supplied artifacts only.
-    Full W2 (with brief normalization) lands in P7."""
+async def standalone_qa(req: StandaloneQARequest, db: DbSession = Depends(get_db)) -> StandaloneQAResponse:
+    """W2 entry point — accepts a raw brief + a plan JSON, normalizes the brief, runs Critic
+    + governance scanners, persists one validation_reports row, returns the merged report."""
     from agents.brief_normalizer import BriefNormalizer
-    from agents.critic import Critic
-    from core.state import CampaignState
+    from orchestrator.nodes import has_blocking_findings, qa_node
     from uuid import uuid4 as _uuid4
 
     plan = ExecutionPlan.model_validate(req.plan_json)
-    state = CampaignState(session_id=_uuid4(), entry_point="qa_existing_plan", plan=plan)
+    sid = _uuid4()
+    state = CampaignState(session_id=sid, entry_point="qa_existing_plan", plan=plan)
     state = await BriefNormalizer().run(state, raw_text=req.brief_text, source_format="markdown")
-    state = await Critic().run(state)
+    state = await qa_node(state)
     if state.validation_report is None:
         raise HTTPException(status_code=500, detail="Critic produced no report")
-    return StandaloneQAResponse(validation_report=state.validation_report)
+
+    # Persist the report — for ad-hoc /qa calls the brief and plan may not exist in the DB,
+    # so persistence is best-effort and only commits if both FKs resolve.
+    try:
+        brief_exists = (
+            db.query(models.Brief).filter(models.Brief.id == state.validation_report.brief_id).first()
+            is not None
+        )
+        plan_exists = (
+            db.query(models.ExecutionPlan).filter(models.ExecutionPlan.id == plan.id).first()
+            is not None
+        )
+        if brief_exists and plan_exists:
+            db.add(
+                models.ValidationReport(
+                    id=state.validation_report.id,
+                    brief_id=state.validation_report.brief_id,
+                    plan_id=state.validation_report.plan_id,
+                    report_json=state.validation_report.model_dump(mode="json"),
+                )
+            )
+            db.commit()
+    except Exception:
+        db.rollback()
+
+    return StandaloneQAResponse(
+        validation_report=state.validation_report,
+        blocking=has_blocking_findings(state),
+    )

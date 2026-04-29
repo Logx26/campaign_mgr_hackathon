@@ -19,8 +19,10 @@ from .channel import ChannelPlan, ChannelSpec
 from .consistency import (
     AudienceFramingFinding,
     CanonicalSuggestion,
+    CanonicalSuggestionExtraction,
     ConsistencyReport,
     CTAFinding,
+    CTAFindingExtraction,
     TerminologyFinding,
     ToneFinding,
 )
@@ -75,8 +77,10 @@ __all__ = [
     "ChannelSpec",
     "AudienceFramingFinding",
     "CanonicalSuggestion",
+    "CanonicalSuggestionExtraction",
     "ConsistencyReport",
     "CTAFinding",
+    "CTAFindingExtraction",
     "TerminologyFinding",
     "ToneFinding",
     "CopyDraft",

@@ -1,0 +1,14 @@
+{
+  "letter": "B",
+  "title": "Kickoff · clarify → plan",
+  "narration": "Sample Brief A starts at completeness 38/100 with 5 hard gaps. The Clarifier emits 4 typed questions with suggested defaults; after submission the score jumps to 92/100 and 1 soft gap remains.",
+  "completeness_before": 38,
+  "completeness_after": 92,
+  "questions_emitted": 4,
+  "sample_questions": [
+    {"field": "budget.total", "type": "currency", "prompt": "What is the total campaign budget?", "default": "$180,000"},
+    {"field": "channels", "type": "multiselect", "prompt": "'social' is ambiguous — pick specific platforms.", "default": ["LinkedIn", "X"]},
+    {"field": "timeline.launch_date", "type": "date", "prompt": "Confirm the campaign go-live date.", "default": "2026-07-01"}
+  ],
+  "channels_chosen": ["LinkedIn", "Email", "Paid Search"]
+}

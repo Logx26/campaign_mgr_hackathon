@@ -1,8 +1,7 @@
 """W1 — Plan from Brief.
 
-P3 + P4 slice: paste a brief → intake → analyze → clarify (the differentiator) →
-answer questions → re-analyze and watch the gap list shrink. Planner + critic + export
-land in P5..P9.
+Paste a brief → intake → analyze → clarify → answer → re-analyze → generate plan →
+review + approve. Severity-emoji ValidationReport + Assumption Ledger render inline.
 """
 from __future__ import annotations
 
@@ -11,7 +10,10 @@ import os
 import httpx
 import streamlit as st
 
-st.set_page_config(page_title="Plan from Brief", layout="wide")
+from ui.styles import inject_global_css, render_banner, styled_error
+
+st.set_page_config(page_title="Axion · Plan from Brief", layout="wide")
+inject_global_css()
 
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8000")
 
@@ -53,11 +55,28 @@ for key, default in [
         st.session_state[key] = default
 
 
-st.title("W1 — Plan from Brief")
-st.caption(
-    "P3 + P4 live. Paste a brief → intake → analyze → clarify → answer → re-analyze. "
-    "The clarification loop is the differentiator: watch the gap list shrink as the AI asks the right questions."
+render_banner(
+    "W1 · Plan from Brief",
+    "Paste a brief → intake → analyze → clarify → answer → re-analyze → generate plan → review. "
+    "The clarification loop is the differentiator: watch the gap list shrink as the AI asks the right questions.",
+    tags=["W1", "live"],
 )
+
+# Demo-launcher hint: pre-fill from the kickoff brief if user came from page 0.
+if st.session_state.get("_launch_demo") in {"A", "B"} and not st.session_state.get("raw_text"):
+    from pathlib import Path as _P
+    target = (
+        "seeds/golden_set/brief_002.md"
+        if st.session_state["_launch_demo"] == "A"
+        else "seeds/exemplar_briefs/b2b_saas_q3_enterprise.md"
+    )
+    try:
+        st.session_state["raw_text"] = (
+            _P(__file__).resolve().parents[2] / target
+        ).read_text(encoding="utf-8")
+    except Exception:
+        pass
+    st.session_state["_launch_demo"] = None
 
 raw_text = st.text_area(
     "Paste a campaign brief (text or markdown)",
@@ -82,7 +101,7 @@ if intake_clicked:
     with st.spinner("Extracting structured brief..."):
         code, data = _api_post("/api/v1/briefs/intake", {"raw_text": raw_text, "source_format": "text"})
     if code >= 400:
-        st.error(f"Intake failed: {data}")
+        styled_error(f"<code>{data}</code>", title="Intake failed")
     else:
         st.session_state.brief_id = data["brief_id"]
         st.session_state.session_id = data["session_id"]
@@ -97,7 +116,7 @@ if analyze_clicked and st.session_state.brief_id:
     with st.spinner("Running completeness rules + ambiguity detector..."):
         code, data = _api_post(f"/api/v1/briefs/{st.session_state.brief_id}/analyze")
     if code >= 400:
-        st.error(f"Analyze failed: {data}")
+        styled_error(f"<code>{data}</code>", title="Analyze failed")
     else:
         st.session_state.gaps = data["gaps"]
 
@@ -105,7 +124,7 @@ if clarify_clicked and st.session_state.brief_id:
     with st.spinner("Clarifier is generating questions..."):
         code, data = _api_post(f"/api/v1/briefs/{st.session_state.brief_id}/clarify")
     if code >= 400:
-        st.error(f"Clarify failed: {data}")
+        styled_error(f"<code>{data}</code>", title="Clarify failed")
     else:
         st.session_state.questions = data["questions"]
         st.session_state.answers_cache = {q["id"]: q.get("suggested_default") or "" for q in data["questions"]}
@@ -208,7 +227,7 @@ if st.session_state.questions:
                     {"answers": answers_payload},
                 )
             if code >= 400:
-                st.error(f"Override apply failed: {data}")
+                styled_error(f"<code>{data}</code>", title="Override apply failed")
             else:
                 st.session_state.brief = data["brief"]
                 st.session_state.clarified = True
@@ -242,7 +261,7 @@ if plan_clicked and st.session_state.brief_id:
     with st.spinner("Generating execution plan (planner → channel specialists → copy drafts → timeline)..."):
         code, data = _api_post(f"/api/v1/briefs/{st.session_state.brief_id}/plan", {}, timeout=180.0)
     if code >= 400:
-        st.error(f"Plan generation failed: {data}")
+        styled_error(f"<code>{data}</code>", title="Plan generation failed")
     else:
         st.session_state.plan = data["plan"]
         st.session_state.copy_drafts = data.get("copy_drafts") or {}
@@ -355,7 +374,7 @@ if st.session_state.plan:
         with st.spinner("Critic + governance + ledger composer running..."):
             code, data = _api_post(f"/api/v1/plans/{plan_id}/review", {}, timeout=180.0)
         if code >= 400:
-            st.error(f"Review failed: {data}")
+            styled_error(f"<code>{data}</code>", title="Review failed")
         else:
             st.session_state.review = data["validation_report"]
             st.session_state.ledger = data["ledger"]
@@ -364,7 +383,7 @@ if st.session_state.plan:
     if approve_clicked and plan_id:
         code, data = _api_post(f"/api/v1/plans/{plan_id}/approve", {})
         if code >= 400:
-            st.error(f"Approve failed: {data}")
+            styled_error(f"<code>{data}</code>", title="Approve failed")
         else:
             st.session_state.plan_status = data["status"]
             st.success("Plan approved")
@@ -372,7 +391,7 @@ if st.session_state.plan:
     if reject_clicked and plan_id:
         code, data = _api_post(f"/api/v1/plans/{plan_id}/reject", {})
         if code >= 400:
-            st.error(f"Reject failed: {data}")
+            styled_error(f"<code>{data}</code>", title="Reject failed")
         else:
             st.session_state.plan_status = data["status"]
             st.warning("Plan rejected")
@@ -411,3 +430,32 @@ if st.session_state.plan:
                     f"  {e['assumption_text']}  \n"
                     f"  _cite: {e['citation']}_"
                 )
+
+    # ---- Export buttons (P8) -----------------------------------------------
+    plan_id_for_export = plan.get("id") if isinstance(plan, dict) else None
+    if plan_id_for_export:
+        st.markdown("### Export")
+        ex_cols = st.columns(3)
+        for label, fmt, mime, ext in [
+            ("Download JSON", "json", "application/json", "json"),
+            ("Download Markdown", "markdown", "text/markdown", "md"),
+            ("Download Gantt HTML", "gantt", "text/html", "html"),
+        ]:
+            url = f"{API_BASE}/api/v1/plans/{plan_id_for_export}/export/{fmt}"
+            with ex_cols[["json", "markdown", "gantt"].index(fmt)]:
+                try:
+                    import httpx as _httpx
+                    with _httpx.Client(timeout=10.0) as _c:
+                        _r = _c.get(url)
+                        if _r.status_code == 200:
+                            st.download_button(
+                                label,
+                                data=_r.content,
+                                file_name=f"plan_{plan_id_for_export}.{ext}",
+                                mime=mime,
+                                key=f"export_{fmt}_{plan_id_for_export}",
+                            )
+                        else:
+                            st.caption(f"{label}: unavailable ({_r.status_code})")
+                except Exception:
+                    st.caption(f"{label}: API offline")

@@ -1,0 +1,12 @@
+{
+  "letter": "C",
+  "title": "Standalone QA · misaligned pair",
+  "narration": "An enterprise brief is paired with an SMB-tone plan. The Critic emits coverage / consistency / compliance findings; deterministic governance scanners flag 'Click here', 'Sign up now' as prohibited CTAs and 'world-class', 'seamless', 'revolutionary' as prohibited terms.",
+  "alignment_score": 31,
+  "blocking": true,
+  "top_findings": [
+    {"severity": "blocker", "category": "compliance", "description": "LinkedIn CTA 'Click here' is in the channel's prohibited list.", "fix": "Replace with one of: Book a demo, See how it works, Read the playbook, Talk to sales."},
+    {"severity": "error", "category": "consistency", "description": "Plan audience summary targets 'small business owners' while brief specifies enterprise (1000+ employees).", "fix": "Rewrite audience_summary to reflect VP RevOps at 1000+ employee companies."},
+    {"severity": "error", "category": "compliance", "description": "Paid Search notes contain prohibited terms: 'seamless', 'revolutionary'.", "fix": "Remove and rewrite with concrete, quantified claims."}
+  ]
+}

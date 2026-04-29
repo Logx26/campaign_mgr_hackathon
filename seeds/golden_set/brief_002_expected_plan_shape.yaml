@@ -1,0 +1,5 @@
+min_channels: 3
+min_weeks: 4
+required_objective_keywords: ["lead", "demo", "conversion"]
+required_channel_names: ["LinkedIn", "Email", "Paid Search"]
+requires_qa_checkpoint: true

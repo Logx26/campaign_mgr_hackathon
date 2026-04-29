@@ -1,0 +1,22 @@
+{# CTA Scanner — LLM fallback when no regex pattern matches the asset body. #}
+
+You are auditing a single marketing asset's body for its **call-to-action (CTA)** — the
+specific phrase the asset asks the reader to do (e.g. "Book a demo", "Start free trial",
+"Open to a 15-minute call?").
+
+## Asset body
+{{ body }}
+
+## Rules
+
+1. Identify **at most one** primary CTA per asset. If there is no clear CTA at all,
+   return `is_cta: false` and leave `raw_cta` blank.
+2. `raw_cta` is the verbatim phrase from the asset, ≤ 12 words, no surrounding punctuation.
+3. `normalized_cta` is your best effort at a canonical phrasing — Title Case, imperative
+   form, ≤ 6 words. If you cannot confidently normalize, leave it null.
+4. **Reject non-CTA phrases.** "Call us at any time" in narrative copy is NOT a CTA.
+   The phrase must be an action the asset is asking the reader to take.
+5. Do NOT invent a CTA that is not in the asset body. If the asset is informational
+   only, return `is_cta: false`.
+
+Reply only with JSON matching the declared schema.

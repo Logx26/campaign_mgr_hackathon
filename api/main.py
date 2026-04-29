@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import briefs, health, plans, sessions
+from api.routes import briefs, consistency, demo, eval_routes, export, health, plans, sessions
 
 
 def create_app() -> FastAPI:
@@ -30,6 +30,10 @@ def create_app() -> FastAPI:
     app.include_router(sessions.router, prefix="/api/v1")
     app.include_router(briefs.router, prefix="/api/v1")
     app.include_router(plans.router, prefix="/api/v1")
+    app.include_router(consistency.router, prefix="/api/v1")
+    app.include_router(export.router, prefix="/api/v1")
+    app.include_router(eval_routes.router, prefix="/api/v1")
+    app.include_router(demo.router, prefix="/api/v1")
 
     return app
 

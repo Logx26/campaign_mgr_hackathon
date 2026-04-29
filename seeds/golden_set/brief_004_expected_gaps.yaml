@@ -1,0 +1,4 @@
+hard_gaps: []
+soft_gaps: []
+minimum_total_gaps: 0
+expected_completeness_score_max: 100.0

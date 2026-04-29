@@ -1,0 +1,13 @@
+{
+  "letter": "A",
+  "title": "Happy path · complete brief → plan",
+  "narration": "A complete enterprise SaaS brief flows through intake → plan → review with no clarification needed. The system handles a strong input cleanly in ~60s.",
+  "alignment_score": 88,
+  "completeness_score": 92,
+  "channels_chosen": ["LinkedIn", "Email", "Paid Search"],
+  "sample_finding": "info · feasibility — Paid Search budget of $30K may underdeliver target CPL given 'enterprise revenue operations' keyword bid landscape.",
+  "ledger_excerpt": [
+    {"field": "channels[0].cta", "basis": "rule", "citation": "channel_specs.linkedin.approved_cta_formats"},
+    {"field": "audience_summary", "basis": "user_input", "citation": "brief.target_audience.raw_description"}
+  ]
+}
