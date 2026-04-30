@@ -54,6 +54,41 @@ async def generate_plan_for_brief(brief_id: UUID, db: DbSession = Depends(get_db
     )
 
 
+class RecentPlan(BaseModel):
+    id: UUID
+    brief_id: UUID
+    campaign_name: str
+    status: str
+    created_at: str
+
+
+@router.get("/plans/recent", response_model=list[RecentPlan])
+def list_recent_plans(limit: int = 20, db: DbSession = Depends(get_db)) -> list[RecentPlan]:
+    """Read-only listing for UI dropdowns. Joins plans with their parent brief to expose
+    a human campaign name without forcing the UI to fetch each plan body."""
+    rows = (
+        db.query(models.ExecutionPlan)
+        .order_by(models.ExecutionPlan.created_at.desc())
+        .limit(max(1, min(limit, 200)))
+        .all()
+    )
+    out: list[RecentPlan] = []
+    for r in rows:
+        body = r.plan_json or {}
+        identity = body.get("campaign_identity") or {}
+        name = str(identity.get("name") or body.get("campaign_name") or "(untitled plan)")
+        out.append(
+            RecentPlan(
+                id=r.id,
+                brief_id=r.brief_id,
+                campaign_name=name,
+                status=str(r.status or "draft"),
+                created_at=r.created_at.isoformat() if r.created_at else "",
+            )
+        )
+    return out
+
+
 @router.get("/plans/{plan_id}", response_model=ExecutionPlan)
 def get_plan(plan_id: UUID, db: DbSession = Depends(get_db)) -> ExecutionPlan:
     row = PlanRepository(db).get(plan_id)
@@ -325,4 +360,63 @@ async def standalone_qa(req: StandaloneQARequest, db: DbSession = Depends(get_db
     return StandaloneQAResponse(
         validation_report=state.validation_report,
         blocking=has_blocking_findings(state),
+    )
+
+
+class QAByIdsRequest(BaseModel):
+    brief_id: UUID
+    plan_id: UUID
+
+
+class QAByIdsResponse(BaseModel):
+    validation_report: ValidationReport
+    blocking: bool
+    brief_plan_relationship: str  # "matched" | "cross_audit"
+
+
+@router.post("/qa/by_ids", response_model=QAByIdsResponse)
+async def qa_by_ids(req: QAByIdsRequest, db: DbSession = Depends(get_db)) -> QAByIdsResponse:
+    """W2 entry point that fetches both brief and plan from the DB. Accepts a brief/plan
+    pair where the plan was generated from a different brief — the response includes a
+    `brief_plan_relationship` field so the UI can disclose 'you are auditing a plan against
+    a brief it wasn't generated from' instead of letting the user mistake a low alignment
+    score for a regression."""
+    brief_row = BriefRepository(db).get(req.brief_id)
+    if brief_row is None:
+        raise HTTPException(status_code=404, detail="brief not found")
+    plan_row = PlanRepository(db).get(req.plan_id)
+    if plan_row is None:
+        raise HTTPException(status_code=404, detail="plan not found")
+
+    brief = Brief.model_validate(brief_row.parsed_json)
+    plan = ExecutionPlan.model_validate(plan_row.plan_json)
+
+    relationship = "matched" if plan_row.brief_id == req.brief_id else "cross_audit"
+
+    sid = brief_row.session_id or req.brief_id
+    state = CampaignState(session_id=sid, entry_point="qa_existing_plan", brief=brief, plan=plan)
+
+    from orchestrator.nodes import has_blocking_findings, qa_node
+
+    state = await qa_node(state)
+    if state.validation_report is None:
+        raise HTTPException(status_code=500, detail="Critic produced no report")
+
+    try:
+        db.add(
+            models.ValidationReport(
+                id=state.validation_report.id,
+                brief_id=state.validation_report.brief_id,
+                plan_id=state.validation_report.plan_id,
+                report_json=state.validation_report.model_dump(mode="json"),
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    return QAByIdsResponse(
+        validation_report=state.validation_report,
+        blocking=has_blocking_findings(state),
+        brief_plan_relationship=relationship,
     )

@@ -16,10 +16,11 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, get_origin
 from uuid import UUID
 
 import redis
+from pydantic import ValidationError
 
 from core.config import get_settings
 from core.schemas import Brief, Question
@@ -81,6 +82,28 @@ def clear_dialog(session_id: UUID) -> None:
 # ---------------------------------------------------------------------------
 
 
+# Top-level Brief fields whose annotation is a list/tuple/set/dict. Writing a free-form
+# string into one of these would corrupt the Brief shape, so overrides targeting these
+# top-level paths get routed to constraints.mandatory_inclusions as an audit line.
+def _list_typed_top_level_fields() -> set[str]:
+    out: set[str] = set()
+    for name, info in Brief.model_fields.items():
+        ann = info.annotation
+        origin = get_origin(ann)
+        if origin in (list, tuple, set, dict):
+            out.add(name)
+    return out
+
+
+_INCOMPATIBLE_TOP_LEVEL = _list_typed_top_level_fields()
+
+
+def _route_to_mandatory_inclusions(data: dict[str, Any], path: str, value: str) -> None:
+    data.setdefault("constraints", {}).setdefault("mandatory_inclusions", []).append(
+        f"[override:{path}] {value}"
+    )
+
+
 def apply_overrides_to_brief(brief: Brief, overrides: dict[str, str]) -> Brief:
     """Return a new Brief with each `(field_path, value)` written into the right slot.
 
@@ -97,7 +120,10 @@ def apply_overrides_to_brief(brief: Brief, overrides: dict[str, str]) -> Brief:
       - any other field_path → appended to constraints.mandatory_inclusions as fallback.
 
     Unknown paths fall through gracefully (no exception) — the value is captured in
-    `BriefOverride` rows by the caller for audit.
+    `BriefOverride` rows by the caller for audit. List-typed top-level paths
+    (e.g. `quantified_targets`, `success_metrics`) are routed to
+    `constraints.mandatory_inclusions` as audit lines so a free-text answer
+    can never corrupt the Brief shape.
     """
     data = brief.model_dump(mode="python")
 
@@ -109,12 +135,23 @@ def apply_overrides_to_brief(brief: Brief, overrides: dict[str, str]) -> Brief:
             _set_path(data, path, v)
         except Exception:
             # Don't let one bad override blow up the whole apply — the audit row still landed.
-            data.setdefault("constraints", {}).setdefault("mandatory_inclusions", []).append(
-                f"[override:{path}] {v}"
-            )
+            _route_to_mandatory_inclusions(data, path, v)
 
-    # Ensure types Pydantic expects (e.g. Decimal) re-coerce cleanly.
-    return Brief.model_validate(data)
+    # Ensure types Pydantic expects (e.g. Decimal) re-coerce cleanly. If validation still
+    # fails (e.g. the LLM emitted an override path that slipped past `_set_path`'s shape
+    # detection), fall back to applying every override only as an audit line on a fresh
+    # dump of the original brief — guaranteed-valid path.
+    try:
+        return Brief.model_validate(data)
+    except ValidationError:
+        safe = brief.model_dump(mode="python")
+        safe.setdefault("constraints", {}).setdefault("mandatory_inclusions", [])
+        for path, value in overrides.items():
+            if value and str(value).strip():
+                safe["constraints"]["mandatory_inclusions"].append(
+                    f"[override:{path}] {str(value).strip()}"
+                )
+        return Brief.model_validate(safe)
 
 
 def _set_path(data: dict[str, Any], path: str, value: str) -> None:
@@ -173,6 +210,27 @@ def _set_path(data: dict[str, Any], path: str, value: str) -> None:
     valid_top_level = set(Brief.model_fields.keys())
     if parts[0] not in valid_top_level:
         raise KeyError(f"unknown brief field: {path}")
+
+    # If the path targets a list-typed top-level field with a free-form string answer
+    # (e.g. quantified_targets, success_metrics), route to mandatory_inclusions as
+    # audit. The Clarifier sometimes emits these paths when asking for a metric or
+    # target — the user's free-text answer cannot validly populate a list[Model].
+    if len(parts) == 1 and parts[0] in _INCOMPATIBLE_TOP_LEVEL:
+        _route_to_mandatory_inclusions(data, path, value)
+        return
+
+    # Special case: appending a single string to a known list path (e.g.
+    # `constraints.mandatory_inclusions`) — append rather than overwrite.
+    if (
+        len(parts) == 2
+        and parts[0] == "constraints"
+        and parts[1] in {"mandatory_inclusions", "exclusions", "legal_restrictions"}
+    ):
+        bucket = data.setdefault("constraints", {}).setdefault(parts[1], [])
+        if isinstance(bucket, list):
+            bucket.append(value)
+            return
+
     cursor = data
     for p in parts[:-1]:
         cursor = cursor.setdefault(p, {})

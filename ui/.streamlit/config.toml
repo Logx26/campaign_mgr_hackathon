@@ -1,9 +1,10 @@
 [theme]
-# Axion demo palette — deep navy canvas with electric coral accent.
-primaryColor = "#FF6B5B"
-backgroundColor = "#0F1623"
-secondaryBackgroundColor = "#172033"
-textColor = "#E6ECF3"
+# Lumeo Campaign Studio — P11 palette refresh (see ADR-009 candidate, ui/styles.py).
+# Layered surfaces (canvas / panel / elevated) + calm electric blue accent.
+primaryColor = "#4F8CFF"
+backgroundColor = "#0B1220"
+secondaryBackgroundColor = "#131C2E"
+textColor = "#ECF1F7"
 font = "sans serif"
 
 [server]

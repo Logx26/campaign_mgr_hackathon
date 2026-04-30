@@ -19,6 +19,7 @@ class CopyDraft(StrictModel):
     body: str
     voice_score: float = Field(ge=0.0, le=100.0)
     voice_score_breakdown: dict[str, float] = Field(default_factory=dict)
+    angle: str = "outcome-led"  # LLM-emitted or keyword-derived; never empty (UI never renders "?")
     rule_violations: list[RuleViolation] = Field(default_factory=list)
     variants: list[UUID] = Field(default_factory=list)  # refs to CopyVariant (Tier 1)
 

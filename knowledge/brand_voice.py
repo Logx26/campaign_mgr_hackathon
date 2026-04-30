@@ -137,3 +137,43 @@ def load_fingerprint(db: DbSession, brand_name: str) -> BrandVoiceFingerprint | 
 
 def load_lines(path: Path) -> list[str]:
     return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+async def get_or_build_fingerprint(
+    db: DbSession,
+    brand_name: str,
+    *,
+    seeds_dir: Path | None = None,
+) -> BrandVoiceFingerprint | None:
+    """Load the fingerprint for `brand_name`; build + persist it on first use.
+
+    Used by the Copy Drafter so the demo doesn't require a manual
+    `python scripts/build_brand_voice_fingerprint.py` step before the first plan.
+
+    Returns None if the fingerprint doesn't exist AND embeddings are unavailable
+    (cannot bootstrap), AND the seeds directory is missing — caller decides what
+    to do (the Copy Drafter currently surfaces a non-zero scoring-failed sentinel).
+    """
+    existing = load_fingerprint(db, brand_name=brand_name)
+    if existing is not None:
+        return existing
+
+    if not is_embeddings_available():
+        return None
+
+    if seeds_dir is None:
+        seeds_dir = Path(__file__).resolve().parents[1] / "seeds" / "brand_voice_samples"
+    on_voice_path = seeds_dir / f"{brand_name.lower()}_on_voice.txt"
+    off_voice_path = seeds_dir / f"{brand_name.lower()}_off_voice.txt"
+    if not on_voice_path.is_file() or not off_voice_path.is_file():
+        return None
+
+    pos = load_lines(on_voice_path)
+    neg = load_lines(off_voice_path)
+    if len(pos) < 5 or len(neg) < 3:
+        return None
+
+    fp = await build_fingerprint(brand_name, pos, neg)
+    persist_fingerprint(db, fp)
+    db.commit()
+    return fp

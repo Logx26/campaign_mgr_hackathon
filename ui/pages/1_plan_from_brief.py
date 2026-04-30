@@ -286,6 +286,20 @@ if st.session_state.plan:
                     line += " · channels: " + ", ".join(obj["addressed_by_channels"])
                 st.markdown(line)
 
+    # Top-level budget line (shown above the channel cards). When a brief omits
+    # budget entirely, surface it explicitly here rather than burying the note in
+    # any channel's copy block.
+    brief_for_render = st.session_state.brief or {}
+    budget_block = (brief_for_render or {}).get("budget") if isinstance(brief_for_render, dict) else None
+    budget_total = (budget_block or {}).get("total") if isinstance(budget_block, dict) else None
+    if budget_total in (None, "", 0):
+        st.markdown(
+            "<div style='color:var(--text-2); margin: 6px 0 12px 0'>"
+            "<strong>Budget:</strong> Not specified in brief (lean test assumed)"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
     # Channels with copy drafts
     st.markdown("#### Channels")
     drafts = st.session_state.copy_drafts or {}
@@ -299,18 +313,45 @@ if st.session_state.plan:
             draft = drafts.get(str(ch["id"]))
             if draft:
                 vs = float(draft.get("voice_score", 0))
-                color = _completeness_color(vs)
+                breakdown = draft.get("voice_score_breakdown") or {}
+                # If the breakdown signals fingerprint missing OR scoring failed,
+                # render an honest "scoring unavailable" badge instead of "0/100".
+                fp_missing = breakdown.get("fingerprint_available") == 0.0
+                scoring_failed = breakdown.get("scoring_failed") == 1.0
+                angle = (draft.get("angle") or "outcome-led").strip() or "outcome-led"
+                if fp_missing or scoring_failed:
+                    badge = "🟠 fingerprint missing" if fp_missing else "🟠 scoring failed"
+                    st.markdown(
+                        f"Voice score: <span style='color:var(--warning); font-weight:600'>{badge}</span>"
+                        f"  ·  angle: <em>{angle}</em>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    color = _completeness_color(vs)
+                    st.markdown(
+                        f"Voice score: <span style='color:{color}; font-weight:600'>{vs:.0f}/100</span>"
+                        f"  ·  angle: <em>{angle}</em>",
+                        unsafe_allow_html=True,
+                    )
+                # Sanitized copy block. We render via a `<pre>` block instead of a
+                # disabled `st.text_area` because Streamlit's disabled textarea
+                # introduces an inner-scroll surface that overlapped neighbouring
+                # cards on some browser zooms (the "raw JSON fragment" artifact).
+                import html as _html
+                body_text = draft.get("body", "") or ""
+                # Defensive: even though copy_drafter sanitizes server-side,
+                # re-strip control chars here in case a stale Redis blob predates
+                # the sanitizer fix.
+                import re as _re
+                body_text = _re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]", "", body_text)
                 st.markdown(
-                    f"Voice score: <span style='color:{color}; font-weight:600'>{vs:.0f}/100</span>"
-                    f"  ·  angle: _{draft.get('angle', '?')}_",
+                    "<pre style='background:var(--bg-soft); border:1px solid var(--border); "
+                    "border-radius:8px; padding:12px 14px; white-space: pre-wrap; "
+                    "word-wrap: break-word; max-height: 240px; overflow-y: auto; "
+                    "font-size: 0.85rem; color: var(--text-1); margin: 6px 0 4px 0'>"
+                    f"{_html.escape(body_text)}"
+                    "</pre>",
                     unsafe_allow_html=True,
-                )
-                st.text_area(
-                    f"copy_{ch['id']}",
-                    value=draft.get("body", ""),
-                    height=180,
-                    label_visibility="collapsed",
-                    disabled=True,
                 )
             if ch.get("asset_requirements"):
                 st.caption("Assets: " + ", ".join(ch["asset_requirements"]))

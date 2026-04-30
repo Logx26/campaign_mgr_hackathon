@@ -37,6 +37,36 @@ class IntakeResponse(BaseModel):
     brief: Brief
 
 
+class RecentBrief(BaseModel):
+    id: UUID
+    campaign_name: str
+    created_at: str
+
+
+@router.get("/recent", response_model=list[RecentBrief])
+def list_recent_briefs(limit: int = 20, db: DbSession = Depends(get_db)) -> list[RecentBrief]:
+    """Read-only listing for UI dropdowns. Returns the most recent briefs by created_at."""
+    from core.db import models
+
+    rows = (
+        db.query(models.Brief)
+        .order_by(models.Brief.created_at.desc())
+        .limit(max(1, min(limit, 200)))
+        .all()
+    )
+    out: list[RecentBrief] = []
+    for r in rows:
+        parsed = r.parsed_json or {}
+        out.append(
+            RecentBrief(
+                id=r.id,
+                campaign_name=str(parsed.get("campaign_name") or "(untitled brief)"),
+                created_at=r.created_at.isoformat() if r.created_at else "",
+            )
+        )
+    return out
+
+
 @router.post("/intake", response_model=IntakeResponse, status_code=status.HTTP_201_CREATED)
 async def intake_brief(req: IntakeRequest, db: DbSession = Depends(get_db)) -> IntakeResponse:
     """Parse raw text into a structured Brief and persist it. Does not analyze gaps yet."""
@@ -186,7 +216,24 @@ def apply_overrides(
         )
         overrides_map[ans.field_path] = ans.answer
 
-    updated_brief = apply_overrides_to_brief(brief, overrides_map)
+    try:
+        updated_brief = apply_overrides_to_brief(brief, overrides_map)
+    except Exception as exc:
+        # apply_overrides_to_brief has its own fallback that re-validates by routing
+        # all overrides into mandatory_inclusions; if even THAT raised, something is
+        # structurally wrong with the stored brief. Surface as 422 with the offending
+        # paths instead of 500 — the audit rows already landed.
+        import logging
+        logging.getLogger("api.briefs.overrides").exception("override apply failed")
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "override_apply_failed",
+                "message": str(exc),
+                "field_paths": list(overrides_map.keys()),
+            },
+        ) from exc
+
     row.parsed_json = updated_brief.model_dump(mode="json")
     flag_modified(row, "parsed_json")
     db.commit()
