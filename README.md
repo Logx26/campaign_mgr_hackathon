@@ -17,7 +17,6 @@ A multi-agent platform built on LangGraph that takes a free-form marketing brief
 - [Testing](#testing)
 - [Project layout](#project-layout)
 - [Documentation](#documentation)
-- [Notes for evaluators](#notes-for-evaluators)
 
 ---
 
@@ -136,7 +135,7 @@ Behind the UI there are 16 stateless agents coordinated by LangGraph, four deter
    ┌─────────┐       ┌─────────┐          ┌─────────┐         ┌──────────┐
    │ Postgres│       │ Qdrant  │          │  Redis  │         │  Azure   │
    │ (briefs,│       │(briefs, │          │(cache,  │         │  OpenAI  │
-   │  plans, │       │ plans,  │          │ session,│         │ (gpt-4o, │
+   │  plans, │       │ plans,  │          │ session,│         │ (gpt-5.4 │
    │  trace, │       │ assets, │          │ budget, │         │ embed-   │
    │  eval)  │       │ terms)  │          │ drafts) │         │  3-small)│
    └─────────┘       └─────────┘          └─────────┘         └──────────┘
@@ -148,7 +147,7 @@ Behind the UI there are 16 stateless agents coordinated by LangGraph, four deter
 - **Orchestrator:** LangGraph 0.2+ (typed `CampaignState`, Postgres checkpoint saver)
 - **API:** FastAPI 0.111+ (async)
 - **UI:** Streamlit 1.35+ (multi-page)
-- **LLM:** Azure OpenAI `gpt-4o`, API version `2024-08-01-preview` (structured outputs with strict JSON Schema)
+- **LLM:** Azure OpenAI `gpt-5.4-mini`, API version `2024-08-01-preview` (structured outputs with strict JSON Schema)
 - **Embeddings:** Azure OpenAI `text-embedding-3-small-alpha` (1536-dim)
 - **Structured store:** Postgres 16
 - **Vector store:** Qdrant (4 collections, cosine distance)
@@ -174,7 +173,7 @@ Behind the UI there are 16 stateless agents coordinated by LangGraph, four deter
 
 - Python 3.11+
 - Docker (for Postgres / Qdrant / Redis containers)
-- An Azure OpenAI deployment with `gpt-4o` (or compatible) and an embeddings deployment
+- An Azure OpenAI deployment with `gpt-5.4-mini` (or compatible) and an embeddings deployment
 
 ### 1. Configure environment
 
@@ -184,7 +183,7 @@ cp .env.example .env
 # edit .env and fill in:
 #   AZURE_OPENAI_API_KEY
 #   AZURE_OPENAI_ENDPOINT          (trailing slash required)
-#   AZURE_OPENAI_DEPLOYMENT        (e.g. gpt-4o)
+#   AZURE_OPENAI_DEPLOYMENT        (e.g. gpt-5.4-mini)
 #   AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT
 #   AZURE_OPENAI_API_VERSION       (default 2024-08-01-preview)
 ```
@@ -379,45 +378,3 @@ campaign_mgr/
 └── docker-compose.infra.yml   storage stack (postgres + qdrant + redis)
 ```
 
----
-
-## Notes for evaluators
-
-### What's deliberately out of scope
-
-- Live ad-platform integration (Meta / Google / LinkedIn ads APIs)
-- Autonomous publishing (everything is reviewed before it leaves the system)
-- A/B test infrastructure
-- CRM / MAP OAuth integrations
-- Real-time budget optimization
-- Multi-tenancy and authentication (single-machine demo)
-
-These are documented in the project plan as Tier 2/3 deferrals; the foundation is in place to extend toward them.
-
-### Key assumptions
-
-- Azure OpenAI `gpt-4o` with structured outputs (`json_schema` + `strict: true`) is the default LLM. Other compatible deployments work with a config swap.
-- The brand voice fingerprint is auto-built on first plan generation from `seeds/brand_voice_samples/{brand}_on_voice.txt` and `_off_voice.txt`. To use a different brand, drop new sample files in.
-- Channel cap is 3 (configurable in code) — the seeded catalog has 6 channels but the planner respects the cap to keep latency under the demo budget.
-- All copy drafts are cached in Redis under `copy_drafts:{session_id}:{plan_id}` (TTL 1 hour) — `CampaignState` is `extra='forbid'` and intentionally lean.
-- Free-text answers to clarifying questions targeting list-typed Brief fields are routed to `constraints.mandatory_inclusions` as audit lines (with the `[override:field.path]` prefix preserved in storage and stripped at render time).
-
-### Demo path (90-second walkthrough)
-
-1. Open **Get Started** → click **Card A** → Plan from Brief loads with a complete enterprise brief.
-2. Click **Process brief** → **Run analysis** → completeness score in the green band, no hard gaps.
-3. Click **Generate plan** → 3 channels (Email, LinkedIn, Paid Search) with copy previews appear in ~6 seconds.
-4. Click **Run review** → severity-ranked findings + Assumption Ledger.
-5. Click **Approve plan** → **Download PDF** to ship a stakeholder-ready document.
-
-For the clarification differentiator, use **Card B** instead — same workflow but with a vague brief that surfaces 5 gaps and walks through the typed-question dialog.
-
-### Known cosmetic issue
-
-The Streamlit sidebar's collapse-arrow positioning vs the fixed dark global header is unreliable across Streamlit minor versions. Sidebar navigation works; only the visual arrow toggle drifts. Treated as a Streamlit-internal cosmetic issue and not blocking.
-
-### Performance notes
-
-- End-to-end Plan from Brief on a complete brief: ~6–8 seconds for plan generation, ~3 seconds for review (cache cold). Cache hits land at $0 and < 50 ms.
-- Cost per full session (brief → plan → review): typically under $0.20 with `gpt-4o`. Per-session budget cap is configurable via `SESSION_BUDGET_USD`.
-- Asset Consistency on 5 assets: ~2 seconds for clustering + canonical resolution.
