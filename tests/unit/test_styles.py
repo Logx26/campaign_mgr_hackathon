@@ -16,9 +16,12 @@ from ui.styles import (
     empty_state,
     key_value_table,
     render_banner,
+    render_banner_with_legend,
+    score_legend,
     scrub_override_prefix,
     section_header,
     severity_pill,
+    step_rail,
     styled_error,
     top_header,
     traffic_color,
@@ -84,29 +87,27 @@ def test_traffic_color_breaks_at_default_thresholds():
 # ---------------------------------------------------------------------------
 
 
-def test_render_banner_places_tags_in_overline_above_h1(captured):
+def test_render_banner_emits_clean_h1_no_tag_concatenation(captured):
+    """Regression guard for the legacy `W1 liveW1 · Plan from Brief` headline bug —
+    tags must NEVER appear inside the H1 element. Per the P11 Iter-2 follow-up the
+    banner now ignores tags/kicker entirely; we still assert the H1 stays clean."""
     render_banner("Plan from Brief", "Subtitle here", tags=["W1", "live"])
     html = captured.calls[-1]
-    overline_idx = html.find("lumeo-overline")
     h1_idx = html.find("<h1>")
-    assert overline_idx != -1, "render_banner must emit an overline div"
     assert h1_idx != -1, "render_banner must emit an h1"
-    assert overline_idx < h1_idx, "overline must be rendered ABOVE the H1, not inline"
-    # The previous bug concatenated tag + title with no separator: e.g. 'liveW1 · Plan'.
-    # Confirm the h1 contains ONLY the title text, not the tags.
     h1_chunk = html[h1_idx : html.find("</h1>")]
     assert "Plan from Brief" in h1_chunk
     assert "liveW1" not in h1_chunk
     assert "<span class='axion-tag'" not in h1_chunk
 
 
-def test_render_banner_uses_kicker_when_provided(captured):
+def test_render_banner_kicker_argument_no_longer_rendered(captured):
+    """`kicker` is accepted for backwards compatibility but is intentionally NOT
+    rendered — the per-page banner now shows only title + subtitle."""
     render_banner("Plan QA", "subtitle", kicker="Workflow · Plan QA")
     html = captured.calls[-1]
-    assert "Workflow · Plan QA" in html
-    overline_idx = html.find("lumeo-overline")
-    h1_idx = html.find("<h1>")
-    assert overline_idx < h1_idx
+    assert "Workflow · Plan QA" not in html
+    assert "lumeo-overline" not in html
 
 
 def test_render_banner_omits_overline_when_no_kicker_or_tags(captured):
@@ -120,17 +121,25 @@ def test_render_banner_omits_overline_when_no_kicker_or_tags(captured):
 # ---------------------------------------------------------------------------
 
 
-def test_top_header_renders_lumeo_wordmark(captured):
+def test_top_header_renders_global_dark_bar_with_wordmark(captured):
+    """The top header is now a full-width fixed dark bar — `position: fixed` at the
+    top of the viewport, spanning sidebar + main. Renders the product name + the
+    canonical PRODUCT_TAGLINE next to it. The `subtitle` kwarg is accepted for
+    backwards compatibility but ignored."""
     top_header()
     html = captured.calls[-1]
-    assert "lumeo-top-header" in html
+    assert "lumeo-global-header" in html
+    assert "lumeo-global-header-inner" in html
     assert PRODUCT_NAME in html
 
 
-def test_top_header_accepts_custom_subtitle(captured):
+def test_top_header_subtitle_argument_is_ignored(captured):
+    """Per-page subtitle param is intentionally ignored; the canonical PRODUCT_TAGLINE
+    is rendered uniformly across every page so the header stays consistent."""
     top_header(subtitle="QA mode")
     html = captured.calls[-1]
-    assert "QA mode" in html
+    assert "QA mode" not in html
+    assert "lumeo-global-header" in html
 
 
 # ---------------------------------------------------------------------------
@@ -138,14 +147,14 @@ def test_top_header_accepts_custom_subtitle(captured):
 # ---------------------------------------------------------------------------
 
 
-def test_section_header_emits_h2_and_optional_kicker(captured):
+def test_section_header_emits_h2_without_kicker(captured):
+    """`kicker` is accepted but not rendered — sections are titled plainly."""
     section_header("Review and approve", kicker="Step 5 · Review")
     html = captured.calls[-1]
     assert "<h2>" in html
-    assert "Step 5 · Review" in html
-    overline_idx = html.find("lumeo-overline")
-    h2_idx = html.find("<h2>")
-    assert overline_idx < h2_idx
+    assert "Review and approve" in html
+    assert "Step 5 · Review" not in html
+    assert "lumeo-overline" not in html
 
 
 def test_section_header_supports_action_text(captured):
@@ -153,6 +162,56 @@ def test_section_header_supports_action_text(captured):
     html = captured.calls[-1]
     assert "lumeo-section-action" in html
     assert "Top 3 by severity" in html
+
+
+# ---------------------------------------------------------------------------
+# Step rail + score legend (new helpers)
+# ---------------------------------------------------------------------------
+
+
+def test_step_rail_renders_arrows_between_pills(captured):
+    step_rail([("Brief", "done"), ("Analyze", "current"), ("Clarify", "pending")])
+    html = captured.calls[-1]
+    assert "lumeo-step-rail" in html
+    # Arrow appears between consecutive pills (n-1 arrows for n steps).
+    assert html.count("step-arrow") == 2
+    # Each pill carries its state class.
+    assert "step-pill done" in html
+    assert "step-pill current" in html
+    assert "step-pill pending" in html
+
+
+def test_step_rail_unknown_state_falls_back_to_pending(captured):
+    step_rail([("X", "weird-state")])
+    html = captured.calls[-1]
+    assert "step-pill pending" in html
+
+
+def test_score_legend_renders_three_colored_chips(captured):
+    score_legend()
+    html = captured.calls[-1]
+    assert "lumeo-legend-strip" in html
+    # All three labels and color classes present.
+    assert "Completeness" in html
+    assert "Voice score" in html
+    assert "Alignment" in html
+    assert "legend-blue" in html
+    assert "legend-mint" in html
+    assert "legend-violet" in html
+
+
+def test_render_banner_with_legend_emits_banner_then_legend_strip(captured):
+    """The banner and the score legend are rendered as TWO sibling markdown calls
+    so the legend strip can attach to the banner via CSS (border-radius continuation,
+    no margin gap)."""
+    render_banner_with_legend("Plan from Brief", "Subtitle line.")
+    # Two markdown calls: the banner-with-legend wrapper, then the legend strip.
+    assert len(captured.calls) >= 2
+    banner_html = captured.calls[-2]
+    legend_html = captured.calls[-1]
+    assert "banner-with-legend" in banner_html
+    assert "Plan from Brief" in banner_html
+    assert "lumeo-legend-strip" in legend_html
 
 
 # ---------------------------------------------------------------------------

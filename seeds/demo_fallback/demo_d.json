@@ -1,7 +1,7 @@
 {
   "letter": "D",
-  "title": "Multi-asset consistency · 5 staged drift assets",
-  "narration": "5 sample assets — 3 say 'AI-powered', 2 say 'AI-assisted'; 3 'Book a demo' CTAs, 2 'Schedule a call'. Greedy cosine clustering (τ=0.70) groups the AI- variants. Canonical resolver picks 'AI-assisted' citing brand_book_§3.1.",
+  "title": "Scan assets for terminology drift",
+  "narration": "Five sample assets — three say 'AI-powered', two say 'AI-assisted'; three 'Book a demo' CTAs and two 'Schedule a call'. Greedy cosine clustering groups the AI- variants. The canonical resolver picks 'AI-assisted' citing brand_book §3.1.",
   "consistency_index": 0.78,
   "terminology_clusters": [
     {"variants": ["AI-powered", "AI-assisted"], "occurrences": {"AI-powered": 3, "AI-assisted": 2}, "canonical": "AI-assisted", "citation": "brand_book_§3.1"}

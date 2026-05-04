@@ -68,7 +68,13 @@ def get_cost_snapshot(session_id: UUID) -> SessionCostSnapshot | None:
 
 
 def list_recent_sessions(limit: int = 20) -> list[dict]:
-    """Return the most-recent sessions with rolled-up trace counts. Used by /sessions/recent."""
+    """Return the most-recent sessions with rolled-up trace counts and cost.
+
+    Cost is computed as `SUM(trace_events.cost_usd)` for each session — the
+    same authoritative path `get_cost_snapshot` uses. Reading
+    `sessions.cost_usd` directly leaves the dropdown stuck at $0.0000 because
+    that column is rarely written (the trace events have the real ledger).
+    Falls back to the session row's stored value only when no events exist."""
     with SessionLocal() as db:
         rows = (
             db.query(models.Session)
@@ -78,10 +84,17 @@ def list_recent_sessions(limit: int = 20) -> list[dict]:
         )
         out: list[dict] = []
         for r in rows:
-            n_events = (
+            events = (
                 db.query(models.TraceEvent)
                 .filter(models.TraceEvent.session_id == r.id)
-                .count()
+                .all()
+            )
+            n_events = len(events)
+            events_cost = sum(
+                (Decimal(e.cost_usd or 0) for e in events), Decimal("0")
+            )
+            cost_display = (
+                events_cost if events_cost > 0 else (r.cost_usd or Decimal("0"))
             )
             out.append(
                 {
@@ -89,7 +102,7 @@ def list_recent_sessions(limit: int = 20) -> list[dict]:
                     "entry_point": r.entry_point,
                     "started_at": r.started_at.isoformat(),
                     "ended_at": r.ended_at.isoformat() if r.ended_at else None,
-                    "cost_usd": float(r.cost_usd or 0),
+                    "cost_usd": float(cost_display),
                     "status": r.status,
                     "n_trace_events": n_events,
                 }

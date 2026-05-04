@@ -1,4 +1,8 @@
-"""Export an ExecutionPlan as JSON / Markdown / Gantt HTML."""
+"""Export an ExecutionPlan as PDF / Markdown / Gantt HTML / JSON.
+
+PDF is the headline format used by the UI (see ``ui/pages/1_Plan_from_Brief.py``).
+JSON and Gantt HTML remain available for power-user / developer tooling but
+are no longer surfaced in the Streamlit UI."""
 from __future__ import annotations
 
 from typing import Literal
@@ -13,7 +17,13 @@ from core.db import models
 from core.db.repositories import PlanRepository
 from core.db.session import get_db
 from core.schemas import ExecutionPlan
-from export import export_plan_gantt_html, export_plan_json, export_plan_markdown
+from export import (
+    export_plan_gantt_html,
+    export_plan_json,
+    export_plan_markdown,
+    export_plan_pdf,
+    export_plan_pptx,
+)
 
 router = APIRouter(tags=["export"])
 
@@ -32,11 +42,32 @@ def _load_plan_and_drafts(db: DbSession, plan_id: UUID) -> tuple[ExecutionPlan, 
 @router.get("/plans/{plan_id}/export/{fmt}")
 def export_plan(
     plan_id: UUID,
-    fmt: Literal["json", "markdown", "gantt"],
+    fmt: Literal["json", "markdown", "gantt", "pdf", "pptx"],
     db: DbSession = Depends(get_db),
 ) -> Response:
     plan, drafts = _load_plan_and_drafts(db, plan_id)
 
+    if fmt == "pptx":
+        body = export_plan_pptx(plan, copy_drafts=drafts)
+        return Response(
+            content=body,
+            media_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "presentationml.presentation"
+            ),
+            headers={
+                "Content-Disposition": f'attachment; filename="plan_{plan_id}.pptx"'
+            },
+        )
+    if fmt == "pdf":
+        body = export_plan_pdf(plan, copy_drafts=drafts)
+        return Response(
+            content=body,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="plan_{plan_id}.pdf"'
+            },
+        )
     if fmt == "json":
         body = export_plan_json(plan, copy_drafts=drafts)
         return Response(

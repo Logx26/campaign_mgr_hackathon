@@ -1,7 +1,7 @@
 {
   "letter": "B",
-  "title": "Kickoff · clarify → plan",
-  "narration": "Sample Brief A starts at completeness 38/100 with 5 hard gaps. The Clarifier emits 4 typed questions with suggested defaults; after submission the score jumps to 92/100 and 1 soft gap remains.",
+  "title": "Resolve gaps before planning",
+  "narration": "A vague brief starts at completeness 38/100 with 5 hard gaps. The system emits 4 typed clarifying questions with suggested defaults; after submission the score jumps to 92/100 and 1 soft gap remains.",
   "completeness_before": 38,
   "completeness_after": 92,
   "questions_emitted": 4,

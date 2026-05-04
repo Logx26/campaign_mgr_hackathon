@@ -16,7 +16,8 @@ def render_trace_view(session_id: str | None) -> list[dict] | None:
         st.caption("No active session.")
         return None
     try:
-        with httpx.Client(timeout=10.0) as c:
+        # Tight timeout — keep the page responsive even when the trace endpoint is slow.
+        with httpx.Client(timeout=5.0) as c:
             r = c.get(f"{API_BASE}/api/v1/sessions/{session_id}/trace")
             if r.status_code != 200:
                 st.caption(f"Trace unavailable ({r.status_code}).")

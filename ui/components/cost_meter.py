@@ -16,7 +16,9 @@ def render_cost_meter(session_id: str | None) -> dict | None:
         st.caption("No active session.")
         return None
     try:
-        with httpx.Client(timeout=5.0) as c:
+        # 3s timeout — Run History should never hang on the backend. If the call
+        # is slow the user gets an inline caption and can click Refresh manually.
+        with httpx.Client(timeout=3.0) as c:
             r = c.get(f"{API_BASE}/api/v1/sessions/{session_id}/cost")
             if r.status_code != 200:
                 st.caption(f"Cost meter unavailable ({r.status_code}).")

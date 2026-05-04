@@ -1,10 +1,11 @@
 [theme]
-# Lumeo Campaign Studio — P11 palette refresh (see ADR-009 candidate, ui/styles.py).
-# Layered surfaces (canvas / panel / elevated) + calm electric blue accent.
-primaryColor = "#4F8CFF"
-backgroundColor = "#0B1220"
-secondaryBackgroundColor = "#131C2E"
-textColor = "#ECF1F7"
+# Lumeo Campaign Studio — light production theme (P11 Iteration 2).
+# Indigo accent on near-white canvas; high-contrast slate text.
+base = "light"
+primaryColor = "#4F46E5"
+backgroundColor = "#F6F7FB"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0F172A"
 font = "sans serif"
 
 [server]

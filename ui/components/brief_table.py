@@ -1,5 +1,5 @@
 """Brief → table rows mapper. One source of truth for the structured-brief renderer
-shared by Page 1 (Plan from Brief) and Page 2 (Plan QA).
+shared by Page 1 (Plan from Brief) and Page 2 (Brief QA).
 
 Status logic consults the latest GapList: if a gap exists with a `field_path` that
 matches the row's source path, the auto-derived status is overridden to "gap". This

@@ -1,7 +1,7 @@
 {
   "letter": "C",
-  "title": "Standalone QA · misaligned pair",
-  "narration": "An enterprise brief is paired with an SMB-tone plan. The Critic emits coverage / consistency / compliance findings; deterministic governance scanners flag 'Click here', 'Sign up now' as prohibited CTAs and 'world-class', 'seamless', 'revolutionary' as prohibited terms.",
+  "title": "Audit a brief + plan pair",
+  "narration": "An enterprise brief is paired with an SMB-tone plan. The Critic emits coverage, consistency, and compliance findings; deterministic governance scanners flag 'Click here' and 'Sign up now' as prohibited CTAs, and 'world-class', 'seamless', 'revolutionary' as prohibited terms.",
   "alignment_score": 31,
   "blocking": true,
   "top_findings": [

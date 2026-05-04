@@ -1,7 +1,7 @@
 {
   "letter": "A",
-  "title": "Happy path · complete brief → plan",
-  "narration": "A complete enterprise SaaS brief flows through intake → plan → review with no clarification needed. The system handles a strong input cleanly in ~60s.",
+  "title": "Generate a complete plan",
+  "narration": "A complete enterprise SaaS brief flows through intake → plan → review with no clarification needed. The system handles a strong input cleanly in about 60 seconds.",
   "alignment_score": 88,
   "completeness_score": 92,
   "channels_chosen": ["LinkedIn", "Email", "Paid Search"],
